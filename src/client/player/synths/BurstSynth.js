@@ -38,68 +38,58 @@ class NoiseBurst extends audio.TimeEngine {
     source.buffer = this.buffer;
     source.start(time);
 
-    if (this.output.gain.value > 0.001)
+    if (this.output.gain.value > 0.0001)
       return time + this.period;
     else
       return null;
   }
 }
 
-export default class FireflySynth {
+class FireflySynth {
   constructor(buffers) {
     // shared-params
-    this._frequency = 0; // @todo - map to user input
-    this._duration = 0;
-    this._maxGain = 0;
-    this._currentLevel = 0;
+    this.frequency = 0;
 
     this.output = audioContext.createGain();
 
-    this._level = audioContext.createGain();
-    this._level.connect(this.output);
-    this._level.gain.value = this._maxGain;
+    this.volume = audioContext.createGain();
+    this.volume.connect(this.output);
+    this.volume.gain.value = 0;
 
-    this._lowpass = audioContext.createBiquadFilter();
-    this._lowpass.connect(this._level);
-    this._lowpass.frequency.value = 400;
+    this.lowpass = audioContext.createBiquadFilter();
+    this.lowpass.connect(this.volume);
+    this.lowpass.frequency.value = 400;
 
-    this._buffer = audioContext.createBuffer(1, 4, sampleRate);
-    const data = this._buffer.getChannelData(0);
+    this.buffer = audioContext.createBuffer(1, 4, sampleRate);
+    const data = this.buffer.getChannelData(0);
     data[0] = 1;
     // data[1] = -0.5; // @note - good for mobile but not desktop
     // data[2] = 0.25;
     // data[3] = -0.125;
   }
 
-  set frequency(value) {
-    this._frequency = value
-  }
-
-  set duration(value) {
-    this._duration = value;
-  }
-
-  set maxGain(value) {
-    this._maxGain = value;
-    this._level.gain.value = this._maxGain * this._currentLevel;
+  connect(destination) {
+    this.output.connect(destination);
   }
 
   // map [1, 0] to [maxGain, 0]
   // @todo - map to user input
-  set level(value) {
-    this._currentLevel = value;
-    this._level.gain.value = this._maxGain * this._currentLevel;
+  set gain(value) {
+    this.volume.gain.value = value;
   }
 
   // @todo - map to user input
   set cutoffFreq(value) {
-    this._lowpass.frequency.value = value;
+    this.lowpass.frequency.value = value;
   }
 
-  trigger(time) {
-    const { _frequency, _duration, _buffer } = this;
-    this.noiseBurst = new NoiseBurst(_frequency, _duration, _buffer);
-    this.noiseBurst.output.connect(this._lowpass);
+  trigger(time, period) {
+    const { frequency, buffer } = this;
+
+    this.noiseBurst = new NoiseBurst(frequency, period, buffer);
+    this.noiseBurst.output.connect(this.lowpass);
     scheduler.add(this.noiseBurst, time);
   }
 }
+
+export default FireflySynth;

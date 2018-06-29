@@ -1,21 +1,28 @@
 import 'source-map-support/register'; // enable sourcemaps in node
+import path from 'path';
 import * as soundworks from 'soundworks/server';
 import PlayerExperience from './PlayerExperience';
 import ControllerExperience from './ControllerExperience';
 import events from 'events';
 
-import defaultConfig from './config/default';
-
+const configName = process.env.ENV || 'default';
+const configPath = path.join(__dirname, 'config', configName);
 let config = null;
 
-switch (process.env.ENV) {
-  default:
-    config = defaultConfig;
-    break;
+// rely on node `require` for synchronicity
+try {
+  config = require(configPath).default;
+} catch(err) {
+  console.error(`Invalid ENV "${configName}", file "${configPath}.js" not found`);
+  process.exit(1);
 }
 
-// configure express environment ('production' enables cache systems)
+// configure express environment ('production' enables express cache for static files)
 process.env.NODE_ENV = config.env;
+// override config if port has been defined from the command line
+if (process.env.PORT)
+  config.port = process.env.PORT;
+
 // initialize application with configuration options
 soundworks.server.init(config);
 
@@ -36,17 +43,10 @@ const sharedParams = soundworks.server.require('shared-params');
 sharedParams.addTrigger('reload', 'Reload', 'player');
 
 // burst synth parameters
-sharedParams.addNumber('synth:burst:frequency', 'Burst - frequency', 10, 25, 0.1, 15, 'player');
-// @note - define a relative duration, relative to the current firefly frequency ?
-sharedParams.addNumber('synth:burst:duration', 'Burst - duration', 0.1, 1, 0.01, 0.7, 'player');
-sharedParams.addNumber('synth:burst:maxGain', 'Burst - maxGain', 1, 400, 1, 200, 'player');
-sharedParams.addNumber('synth:burst:level', 'Burst - level', 0, 1, 0.01, 1, 'player');
-sharedParams.addNumber('synth:burst:cutoffFreq', 'Burst - cutoffFreq', 100, 2000, 1, 500, 'player');
+sharedParams.addNumber('synth:burst:gain', 'Burst - gain', 0, 100, 0.01, 10, 'player');
+sharedParams.addNumber('synth:burst:cutoffFreq', 'Burst - cutoffFreq', 100, 2000, 1, 155, 'player');
 
-sharedParams.addNumber('synth:sine:level', 'Sine - level', 0, 1, 0.01, 0.2, 'player');
-
-// sharedParams.addNumber('group1CenterPeriod', 'Group 1 - Center Period', 0.5, 3, 0.01, 1);
-// sharedParams.addNumber('group2CenterPeriod', 'Group 2 - Center Period', 0.5, 3, 0.01, 1);
+sharedParams.addNumber('synth:sine:level', 'Sine - level', 0, 1, 0.01, 0.5, 'player');
 
 const com = new events.EventEmitter();
 

@@ -1,11 +1,8 @@
 import * as soundworks from 'soundworks/client';
 
-
-export default class ControllerExperience extends soundworks.BasicSharedController {
+class ControllerExperience extends soundworks.ControllerExperience {
   constructor() {
     super();
-
-    // this.auth = this.require('auth');
 
     // burst synth
     this.setGuiOptions('synth:burst:frequency', { type: 'slider' });
@@ -18,3 +15,5 @@ export default class ControllerExperience extends soundworks.BasicSharedControll
     this.setGuiOptions('synth:sine:level', { type: 'slider' });
   }
 }
+
+export default ControllerExperience;

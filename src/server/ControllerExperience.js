@@ -1,6 +1,6 @@
 import * as soundworks from 'soundworks/server';
 
-export default class ControllerExperience extends soundworks.BasicSharedController {
+class ControllerExperience extends soundworks.ControllerExperience {
   constructor(clientType, com) {
     super(clientType);
 
@@ -14,23 +14,7 @@ export default class ControllerExperience extends soundworks.BasicSharedControll
     super.start();
 
     this.com.addListener('players', (players) => this.players = players);
-
-
-
-    // this.sharedParams.addParamListener('group1CenterPeriod', (value) => {
-    //   this.players.forEach((player) => {
-    //     if ((player.index + 1) % 2 === 0)
-    //       this.send(player, 'centerFreq', value)
-    //   });
-    // });
-
-    // this.sharedParams.addParamListener('group2CenterPeriod', (value) => {
-    //   this.players.forEach((player) => {
-    //     if (player.index % 2 === 0)
-    //       this.send(player, 'centerFreq', value)
-    //   });
-    // });
-
-
   }
 }
+
+export default ControllerExperience;
